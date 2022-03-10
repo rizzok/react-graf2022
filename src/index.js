@@ -1,128 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ReactDOM from "react-dom";
 
-function useIncrement(initial = 0, step = 1) {
-    const [count, setCount] = useState(initial);
-    const increment = () => {
-        setCount(c => c + step)
-    }
-    return [count, increment]
-}
-
-function useAutoIncrement(initial = 0, step = 1) {
-    const [count, increment] = useIncrement(initial, step)
-    
-    useEffect(() => {
-        const timer = window.setInterval(() => {
-            increment()
-        }, 1000);
-
-        return () => {
-            clearInterval(timer)
-        }
-    }, [])
-
-    return count
-}
-
-function useToggle(visible = true) {
-    const [isVisible, setIsVisible] = useState(visible)
-    const setCompteurVisible = () => {
-        setIsVisible(isVisible => !isVisible)
-    }
-    return [isVisible, setCompteurVisible]
-}
-
-function Compteur() {
-    const count = useAutoIncrement(10);
-    
+function PrimaryButton({children}) {
     return (
-        <button>Compteur {count}</button>
-    );
+        <button type="submit">{children}</button>
+    )
 }
 
-function useFetch(url) {
-    const [datas, setDatas] = useState([])
-    const [isLoaded, setIsLoaded] = useState(false)
-    const [error, setError] = useState(null)
-
-    useEffect(() => {
-        fetch(url)
-            .then(response => response.json())
-            .then(
-                result => {
-                    setIsLoaded(true)
-                    setDatas(result)
-                },
-                error => {
-                    setIsLoaded(true)
-                    setError(error)
-                }
-            )
-    }, [])
-
-    return [datas, isLoaded, error]
+function FormField(props) {
+    return (
+        <div>
+            <label htmlFor={props.name}>{props.children} : </label>
+            <input type="text" name={props.name} id={props.name} />
+        </div>
+    )
 }
 
-function TodoList() {
-    const [todos, isLoaded, error] = useFetch('https://jsonplaceholder.typicode.com/todos?_limit=10')
-
-    if (error) {
-        return <div>Erreur : {error.message}</div>;
-    } else if (!isLoaded) {
-        return <div>Chargement...</div>;
-    } else {
-        return (
-            <ul>
-                {todos.map(todo => (
-                    <li key={todo.id}>
-                        {todo.title}
-                    </li>
-                ))}
-            </ul>
-        );
-    }
-}
-
-function PostTable() {
-    const [posts, isLoaded, error] = useFetch('https://jsonplaceholder.typicode.com/comments?_limit=10')
-    
-    if (error) {
-        return <p>Erreur : {error}</p>
-    } else if (!isLoaded) {
-        return <p>Chargement...</p>
-    } else {
-        return (
-            <div>
-                {posts.map(p => {
-                    return (
-                        <div key={p.id}>
-                            <h3>{p.name}</h3>
-                            <p>{p.email}</p>
-                            <p>{p.body}</p>
-                        </div>
-                    )
-                })}
-            </div>
-        )
-    }
+function FormContext({children}) {
+    return (
+        <form>
+            {children}
+        </form>
+    )
 }
 
 function App() {
-    const [compteurVisible, setCompteurVisible] = useToggle(true)
 
+    const handleSubmit = useCallback((value) => {
+        console.log(value);
+    }, [])
+    
     return (
-        <>
-            <div>
-                <input type="checkbox" id="togglecompteur" name='togglecompteur'
-                    onChange={setCompteurVisible} checked={compteurVisible} />
-                <label htmlFor="togglecompteur">Afficher le compteur</label>
-            </div>
-            {compteurVisible && <Compteur />}
-            <TodoList/>
-            <PostTable/>
-        </>
+        <FormContext 
+            defaultValue={{name: 'Doe', firstname: 'John'}} 
+            onSubmit={handleSubmit}>
+                <FormField name="name">Nom</FormField>
+                <FormField name="firstname">Prénom</FormField>
+                <PrimaryButton>Envoyer</PrimaryButton>
+        </FormContext>
     )
+
 }
 
 ReactDOM.render(
